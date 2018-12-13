@@ -36,7 +36,7 @@ locals {
 }
 
 data "template_file" "config_execution" {
-  template = "${file("${path.module}/modules/scripts/config_execution.sh")}"
+  template = "${file("${path.module}/scripts/config_execution.sh")}"
 
   vars = {
     server_ip          = "${module.pbspro_server.private_ip}"
@@ -92,7 +92,7 @@ resource "null_resource" "execution" {
 }
 
 data "template_file" "config_cluster" {
-  template = "${file("${path.module}/modules/scripts/config_cluster.sh")}"
+  template = "${file("${path.module}/scripts/config_cluster.sh")}"
 
   vars = {
     execution_host_names = "${join(" ", module.pbspro_execution.host_names)}"

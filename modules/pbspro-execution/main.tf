@@ -3,7 +3,7 @@ locals {
 }
 
 data "template_file" "execution" {
-  template = "${file("${path.module}/../../modules/scripts/install_pbs.sh")}"
+  template = "${file("${path.module}/../../scripts/install_pbs.sh")}"
 }
 
 resource "oci_core_instance" "execution" {
