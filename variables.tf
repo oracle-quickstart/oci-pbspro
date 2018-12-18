@@ -3,7 +3,7 @@ variable "compartment_ocid" {
 }
 
 variable "availability_domain" {
-  description = "The Availability Domain for the PBS Pro instance."
+  description = "The Availability Domain for the PBS complex."
 }
 
 variable "ssh_authorized_keys" {
@@ -11,7 +11,7 @@ variable "ssh_authorized_keys" {
 }
 
 variable "ssh_private_key" {
-  description = "The private key path to access instance."
+  description = "The private key path to access instances."
 }
 
 variable "server_display_name" {
