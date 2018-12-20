@@ -33,3 +33,16 @@ variable "ssh_authorized_keys" {
 variable "ssh_private_key" {
   description = "The private key path to access the PBS Pro instance."
 }
+
+variable "bastion_host" {
+  description = "The host of bastion."
+}
+
+variable "bastion_user" {
+  description = "The user of the bastion host."
+  default     = "opc"
+}
+
+variable "bastion_private_key" {
+  description = "The private key path to access the bastion instance."
+}

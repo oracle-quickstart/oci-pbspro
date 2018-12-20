@@ -10,6 +10,9 @@ module "pbspro_execution" {
   assign_public_ip    = "${var.execution_assign_public_ip}"
   ssh_authorized_keys = "${var.ssh_authorized_keys}"
   ssh_private_key     = "${var.ssh_private_key}"
+  bastion_host        = "${var.bastion_host}"
+  bastion_user        = "${var.bastion_user}"
+  bastion_private_key = "${var.bastion_private_key}"
 }
 
 module "pbspro_server" {
@@ -23,6 +26,9 @@ module "pbspro_server" {
   assign_public_ip    = "${var.server_assign_public_ip}"
   ssh_authorized_keys = "${var.ssh_authorized_keys}"
   ssh_private_key     = "${var.ssh_private_key}"
+  bastion_host        = "${var.bastion_host}"
+  bastion_user        = "${var.bastion_user}"
+  bastion_private_key = "${var.bastion_private_key}"
 }
 
 data "oci_core_subnet" "server" {
@@ -32,6 +38,7 @@ data "oci_core_subnet" "server" {
 locals {
   execution_script_dest = "~/config_execution.sh"
   cluster_script_dest   = "~/config_cluster.sh"
+  private_key_dest      = "/home/opc/.ssh/id_rsa"
   server_domain_name    = "${var.server_display_name}.${data.oci_core_subnet.server.subnet_domain_name}"
 }
 
@@ -50,11 +57,14 @@ resource "null_resource" "execution" {
 
   provisioner "file" {
     connection = {
-      host        = "${module.pbspro_execution.public_ips[count.index]}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${module.pbspro_execution.private_ips[count.index]}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     content     = "${data.template_file.config_execution.rendered}"
@@ -63,24 +73,30 @@ resource "null_resource" "execution" {
 
   provisioner "file" {
     connection = {
-      host        = "${module.pbspro_execution.public_ips[count.index]}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${module.pbspro_execution.private_ips[count.index]}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     source      = "${var.ssh_private_key}"
-    destination = "/home/opc/.ssh/id_rsa"
+    destination = "${local.private_key_dest}"
   }
 
   provisioner "remote-exec" {
     connection = {
-      host        = "${module.pbspro_execution.public_ips[count.index]}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${module.pbspro_execution.private_ips[count.index]}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     inline = [
@@ -107,11 +123,14 @@ resource "null_resource" "cluster" {
 
   provisioner "file" {
     connection = {
-      host        = "${module.pbspro_server.public_ip}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${module.pbspro_server.private_ip}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     content     = "${data.template_file.config_cluster.rendered}"
@@ -120,11 +139,14 @@ resource "null_resource" "cluster" {
 
   provisioner "remote-exec" {
     connection = {
-      host        = "${module.pbspro_server.public_ip}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${module.pbspro_server.private_ip}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     inline = [

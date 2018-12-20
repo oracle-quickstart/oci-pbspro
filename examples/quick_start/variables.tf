@@ -6,6 +6,8 @@ variable "region" {}
 variable "compartment_ocid" {}
 variable "ssh_authorized_keys" {}
 variable "ssh_private_key" {}
+variable "bastion_authorized_keys" {}
+variable "bastion_private_key" {}
 
 variable "image_ids" {
   type = "map"
@@ -26,7 +28,7 @@ variable "vcn_cidr" {
 }
 
 variable "ad_index" {
-  description = "The index of the availablity domain. 1, 2, or 3"
+  description = "The index of the availablity domain for PBS. 1, 2, or 3"
   default     = 1
 }
 
@@ -53,4 +55,24 @@ variable "execution_display_name" {
 variable "execution_shape" {
   description = "The shape for the PBS Pro execution hosts."
   default     = "VM.Standard2.1"
+}
+
+variable "bastion_display_name" {
+  description = "The display name of the bastion host."
+  default     = "pbs-bastion"
+}
+
+variable "bastion_shape" {
+  description = "The shape of the bastion host."
+  default     = "VM.Standard1.1"
+}
+
+variable "bastion_user" {
+  description = "The user of the bastion host."
+  default     = "opc"
+}
+
+variable "bastion_ad_index" {
+  description = "The availablity domain index of the bastion host."
+  default     = 1
 }

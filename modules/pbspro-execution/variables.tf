@@ -38,7 +38,15 @@ variable "execution_count" {
   description = "The number of the PBS Pro execution hosts."
 }
 
-# variable "server_host_name" {
-#   description = "The hostname of the PBS Pro server."
-# }
+variable "bastion_host" {
+  description = "The host of bastion."
+}
 
+variable "bastion_user" {
+  description = "The user of the bastion host."
+  default     = "opc"
+}
+
+variable "bastion_private_key" {
+  description = "The private key path to access the bastion instance."
+}

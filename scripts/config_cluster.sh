@@ -1,6 +1,6 @@
 #!/bin/bash
 #To start PBS Pro server
-sudo systemctl start pbs
+sudo systemctl restart pbs
 sudo systemctl status pbs
 
 if [ -z "${execution_ips}" ]; then

@@ -58,9 +58,22 @@ variable "execution_image_id" {
 
 variable "execution_assign_public_ip" {
   description = "Whether the VNIC should be assigned a public IP address."
-  default     = true
+  default     = false
 }
 
 variable "execution_subnet_id" {
   description = "The subnet id to host the PBS Pro execution hosts."
+}
+
+variable "bastion_host" {
+  description = "The host of bastion."
+}
+
+variable "bastion_user" {
+  description = "The user of the bastion host."
+  default     = "opc"
+}
+
+variable "bastion_private_key" {
+  description = "The private key path to access the bastion instance."
 }

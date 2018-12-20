@@ -33,11 +33,14 @@ resource "oci_core_instance" "server" {
 
   provisioner "file" {
     connection = {
-      host        = "${self.public_ip}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${self.private_ip}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     content     = "${data.template_file.server.rendered}"
@@ -46,11 +49,14 @@ resource "oci_core_instance" "server" {
 
   provisioner "remote-exec" {
     connection = {
-      host        = "${self.public_ip}"
-      agent       = false
-      timeout     = "5m"
-      user        = "opc"
-      private_key = "${file("${var.ssh_private_key}")}"
+      host                = "${self.private_ip}"
+      agent               = false
+      timeout             = "5m"
+      user                = "opc"
+      private_key         = "${file("${var.ssh_private_key}")}"
+      bastion_host        = "${var.bastion_host}"
+      bastion_user        = "${var.bastion_user}"
+      bastion_private_key = "${file("${var.bastion_private_key}")}"
     }
 
     inline = [
