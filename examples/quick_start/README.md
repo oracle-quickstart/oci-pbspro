@@ -1,4 +1,4 @@
-## Create VCN and Deploy PBS Pro
+## Create VCN and Deploy PBS Pro Cluster
 This example shows how to deploy the PBS cluster (open source version) on the Oracle Cloud Infrastructure using Terraform.. This configuration generally implements this:
 
 ![PBS architecture](./image/pbs.png)
@@ -41,7 +41,7 @@ View what Terraform plans do before actually doing it:
 ```
 $ terraform plan
 ```
-Use Terraform to Provision resources and PBS Pro cluster on OCI:
+Use Terraform to Provision resources and PBS Pro cluster:
 ```
 $ terraform apply
 ```
@@ -69,6 +69,8 @@ $ cat myjob.py
 #PBS -l select=1:ncpus=1:mem=1gb
 #PBS -N HelloJob
 print "Hello"
+$ qsub myjob.py
+0.pbspro-server
 ```
 Check the result of the job:
 ```
