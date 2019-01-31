@@ -46,3 +46,4 @@ variable "bastion_user" {
 variable "bastion_private_key" {
   description = "The private key path to access the bastion instance."
 }
+

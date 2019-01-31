@@ -40,7 +40,9 @@ locals {
   cluster_script_dest   = "~/config_cluster.sh"
   private_key_dest      = "/home/opc/.ssh/id_rsa"
   server_domain_name    = "${var.server_display_name}.${data.oci_core_subnet.server.subnet_domain_name}"
+  tmp_pubkey_dest = "~/tmp.key.pub"
 }
+
 
 data "template_file" "config_execution" {
   template = "${file("${path.module}/scripts/config_execution.sh")}"
@@ -50,6 +52,18 @@ data "template_file" "config_execution" {
     server_host_name   = "${var.server_display_name}"
     server_domain_name = "${local.server_domain_name}"
   }
+}
+
+data "template_file" "tfvar" {
+  template = "${file("${path.module}/scripts/terraform.tfvars.template")}"
+
+  vars {
+      tenancy_ocid = "${var.tenancy_ocid}"
+      user_ocid = "${var.user_ocid}"
+      fingerprint = "${var.fingerprint}"
+      region = "${var.region}"
+      compartment_ocid = "${var.compartment_ocid}"
+   }
 }
 
 resource "null_resource" "execution" {
@@ -137,6 +151,95 @@ resource "null_resource" "cluster" {
     destination = "${local.cluster_script_dest}"
   }
 
+   provisioner "file" {
+      connection = {
+        host                = "${module.pbspro_server.private_ip}"
+        agent               = false
+        timeout             = "5m"
+        user                = "opc"
+        private_key         = "${file("${var.ssh_private_key}")}"
+        bastion_host        = "${var.bastion_host}"
+        bastion_user        = "${var.bastion_user}"
+        bastion_private_key = "${file("${var.bastion_private_key}")}"
+      }
+
+      content     = "${data.template_file.tfvar.rendered}"
+      destination = "/home/opc/terraform.tfvars.template"
+    }
+
+    provisioner "file" {
+      connection = {
+        host                = "${module.pbspro_server.private_ip}"
+        agent               = false
+        timeout             = "5m"
+        user                = "opc"
+        private_key         = "${file("${var.ssh_private_key}")}"
+        bastion_host        = "${var.bastion_host}"
+        bastion_user        = "${var.bastion_user}"
+        bastion_private_key = "${file("${var.bastion_private_key}")}"
+      }
+
+      source      = "${var.private_key_path}"
+      destination = "/home/opc/oci_api_key.pem"
+    }
+
+    provisioner "file" {
+      connection = {
+        host        = "${module.pbspro_server.private_ip}"
+        agent       = false
+        timeout     = "5m"
+        user        = "opc"
+        private_key = "${file("${var.ssh_private_key}")}"
+
+        bastion_host        = "${var.bastion_host}"
+        bastion_user        = "${var.bastion_user}"
+        bastion_private_key = "${file("${var.bastion_private_key}")}"
+      }
+
+      source      = "${path.module}/scripts/tools"
+      destination = "/home/opc"
+    }
+
+    provisioner "file" {
+          connection = {
+            host        = "${module.pbspro_server.private_ip}"
+            agent       = false
+            timeout     = "5m"
+            user        = "opc"
+            private_key = "${file("${var.ssh_private_key}")}"
+
+            bastion_host        = "${var.bastion_host}"
+            bastion_user        = "${var.bastion_user}"
+            bastion_private_key = "${file("${var.bastion_private_key}")}"
+          }
+
+          source      = "${var.ssh_authorized_keys}"
+          destination = "${local.tmp_pubkey_dest}"
+    }
+
+
+    provisioner "remote-exec" {
+      connection = {
+        host                = "${module.pbspro_server.private_ip}"
+        agent               = false
+        timeout             = "5m"
+        user                = "opc"
+        private_key         = "${file("${var.ssh_private_key}")}"
+        bastion_host        = "${var.bastion_host}"
+        bastion_user        = "${var.bastion_user}"
+        bastion_private_key = "${file("${var.bastion_private_key}")}"
+      }
+
+      inline = [
+        "chmod +x ${local.cluster_script_dest}",
+        "${local.cluster_script_dest}",
+      ]
+    }
+}
+
+resource "null_resource" "execution_post" {
+  depends_on = ["null_resource.cluster"]
+
   provisioner "remote-exec" {
     connection = {
       host                = "${module.pbspro_server.private_ip}"
@@ -150,8 +253,16 @@ resource "null_resource" "cluster" {
     }
 
     inline = [
-      "chmod +x ${local.cluster_script_dest}",
-      "${local.cluster_script_dest}",
+      "chmod auo+x /home/opc/tools/postinstall_pbs.sh",
+      "sudo su - root -c '/home/opc/tools/postinstall_pbs.sh control > /home/opc/tools/postinstall_pbs.log'",
     ]
   }
+}
+
+resource "oci_core_image" "image" {
+    depends_on = ["null_resource.cluster"]
+
+    compartment_id = "${var.compartment_ocid}"
+    instance_id = "${module.pbspro_execution.ids[0]}"
+    display_name = "pbsproexecimage"
 }
