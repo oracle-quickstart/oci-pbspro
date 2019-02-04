@@ -6,7 +6,7 @@ import os
 import random
 import re
 
-
+agent_home = "/opt/tools/agent/"
 # Get the PENDS cpu number for normal
 def getPEND():
     (status, output) = commands.getstatusoutput('qstat -s | grep "Never Run"')
@@ -55,7 +55,7 @@ def touch(path):
 #4. Provision VM by terraform command
 #5. Wait 5 mins , remove the lock file
 def provisionVM(num):
-    lock_file = './lock'
+    lock_file = agent_home + '/lock'
     if os.path.exists(lock_file):
 
        print('###########################################')
@@ -68,16 +68,17 @@ def provisionVM(num):
        print('#########################################################\n\t')
        touch(lock_file)
 
-    target_file = './image/terraform.tfvars'
-    template_file = './image/terraform.tfvars.template'
+    target_file = agent_home + '/image/terraform.tfvars'
+    template_file = agent_home + '/image/terraform.tfvars.template'
     rep(template_file,target_file,str(random.random()),str(num))
 
-    commands.getstatusoutput("rm -rf ./image/terraform.tfstate")
+    commands.getstatusoutput("rm -rf " + agent_home + "/image/terraform.tfstate")
 
     print('#######################################')
     print('# Begin to execute terraform command. #')
     print('#######################################\n\t')
-    (status, output) = commands.getstatusoutput("cd image && terraform init && terraform apply -auto-approve")
+    scale_path = agent_home + '/image'
+    (status, output) = commands.getstatusoutput("cd " + scale_path + " && terraform init && terraform apply -auto-approve")
     print(output)
     print(status)
 
@@ -94,6 +95,7 @@ def rep(template_file,target_file,newStr1,newStr2):
 
     template = file(template_file,'r')
     target = file(target_file, 'w')
+    newStr1 = newStr1.replace(".", "")
 
     for line in template.readlines():
        target.write(line.replace('NAME','PBS-'+newStr1).replace('VM',newStr2))
@@ -103,24 +105,24 @@ def rep(template_file,target_file,newStr1,newStr2):
 
 def main():
     interval = 1     # interval time
-    shape = 2       # the number of CPUs of current shape
+    shape = 4       # the number of CPUs of current shape
     scale_num = getPEND()
     print("scale_num is: " + str(scale_num))
     while(True):
       time.sleep(interval)
       scale_num = getPEND()
-      prov_num = math.ceil(scale_num/shape)
+      prov_num = int(math.ceil(scale_num * 1.0 / shape))  # the final number of VMs to be provisioned
 
       print('#############################################')
-      print('# the number of CPUs need to be scaled is '+str(scale_num)+' #')
+      print('# the number of VMs need to be scaled is '+str(prov_num)+' #')
       print('#############################################\n\t')
-      prov_num = math.ceil(scale_num / shape)  # the final number of VMs to be provisioned
 
       if(prov_num > 0):
          print("start")
          cleanUpQueue()
          print("end queue cleanup")
-         provisionVM(int(prov_num))
+         provisionVM(prov_num)
+         
 
 if __name__ == '__main__' :
     main()

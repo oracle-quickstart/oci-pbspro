@@ -42,9 +42,12 @@ function deploy_agent() {
     mkdir -p $AGENT_HOME/image
 
     mv /home/opc/tools/scaleout.py $AGENT_HOME/
+    mv /home/opc/tools/autoscale.sh $AGENT_HOME/
     mv /home/opc/tools/myjob.sh $AGENT_HOME/
+    mv /home/opc/tools/config_cluster.sh $AGENT_HOME/
 
-    chmod auo+x $AGENT_HOME/scaleout.py
+    chmod auo+x $AGENT_HOME/autoscale.sh
+    chmod auo+x $AGENT_HOME/config_cluster.sh
 
     cp /home/opc/terraform.tfvars.template $AGENT_HOME/image/
     cat >>$AGENT_HOME/image/terraform.tfvars.template <<EOF
@@ -56,10 +59,15 @@ EOF
     mv /home/opc/tools/autoscale.tf $AGENT_HOME/image/
     mv /home/opc/oci_api_key.pem $AGENT_HOME/image/
     chmod 600 $AGENT_HOME/image/oci_api_key.pem
-
-
-
     chown -R opc:opc $AGENT_HOME
+}
+
+function start_agent() {
+    #su - opc
+    #/usr/bin/python /opt/tools/agent/scaleout.py > /opt/tools/agent/scaleout.log &
+    sudo su - root -c '/usr/bin/python /opt/tools/agent/scaleout.py > /opt/tools/agent/scaleout.log'
+    ps -ef | grep scaleout
+
 }
 
 if [ "$1" = "control" ]; then
@@ -73,6 +81,9 @@ if [ "$1" = "control" ]; then
 
     #Deploy agent for auto scale
     deploy_agent
+
+    #echo "`date`: Start Agent."
+    start_agent
 fi
 
 if [ "$1" = "execution" ]; then

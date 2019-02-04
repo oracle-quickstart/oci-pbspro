@@ -254,6 +254,7 @@ resource "null_resource" "execution_post" {
 
     inline = [
       "chmod auo+x /home/opc/tools/postinstall_pbs.sh",
+      "chmod auo+x /home/opc/tools/autoscale.sh",
       "sudo su - root -c '/home/opc/tools/postinstall_pbs.sh control > /home/opc/tools/postinstall_pbs.log'",
     ]
   }

@@ -1,5 +1,8 @@
 #!/bin/bash
 #To start PBS Pro server
+echo "execution_ips=${execution_ips}"
+echo "execution_host_names=${execution_host_names}"
+
 sudo systemctl restart pbs
 sudo systemctl status pbs
 

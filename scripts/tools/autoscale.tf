@@ -98,8 +98,13 @@ resource "oci_core_instance" "extend_host" {
     }
 }
 
+locals {
+  reconfig_script = "/opt/tools/agent/config_cluster.sh"
+}
+
 data "template_file" "reconfig_cluster" {
-  template = "/home/opc/tools/image/config_cluster.sh"
+  #template = "/opt/tools/agent/config_cluster.sh"
+  template = "${file("${local.reconfig_script}")}"
 
   vars = {
     execution_host_names = "${join(" ", "${oci_core_instance.extend_host.*.display_name}")}"
@@ -108,23 +113,8 @@ data "template_file" "reconfig_cluster" {
 }
 
 resource "null_resource" "reconfig" {
-
-  provisioner "remote-exec" {
-    connection = {
-      host                = "${module.pbspro_server.private_ip}"
-      agent               = false
-      timeout             = "5m"
-      user                = "opc"
-      private_key         = "${file("${var.ssh_private_key}")}"
-      bastion_host        = "${var.bastion_host}"
-      bastion_user        = "${var.bastion_user}"
-      bastion_private_key = "${file("${var.bastion_private_key}")}"
-    }
-
-    inline = [
-      "chmod auo+x /home/opc/tools/config_cluster.sh",
-      "./home/opc/tools/config_cluster.sh  > /home/opc/tools/config_cluster.log'",
-    ]
+  provisioner "local-exec" {
+    command = "${data.template_file.reconfig_cluster.rendered}"
   }
 }
 
