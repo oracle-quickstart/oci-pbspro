@@ -65,7 +65,9 @@ EOF
 function start_agent() {
     #su - opc
     #/usr/bin/python /opt/tools/agent/scaleout.py > /opt/tools/agent/scaleout.log &
-    sudo su - root -c '/usr/bin/python /opt/tools/agent/scaleout.py > /opt/tools/agent/scaleout.log'
+    #sudo su - root -c '/usr/bin/python /opt/tools/agent/scaleout.py > /opt/tools/agent/scaleout.log &'
+    sudo su - root -c 'nohup /usr/bin/python /opt/tools/agent/scaleout.py > /opt/tools/agent/scaleout.log 2>&1 &'
+    echo  "`date`: Agent started."
     ps -ef | grep scaleout
 
 }

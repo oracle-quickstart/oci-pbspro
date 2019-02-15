@@ -29,7 +29,7 @@ def getCurCPU():
 
 # Clean up Queue:
 def cleanUpQueue():
-    print("start to clean up queue!")
+    #print("start to clean up queue!")
     (status, output) = commands.getstatusoutput('qstat -s | grep "Q" | grep -v "Queue"')
     print("pending queue info is: " + output)
 
@@ -108,17 +108,19 @@ def main():
     shape = 4       # the number of CPUs of current shape
     scale_num = getPEND()
     print("scale_num is: " + str(scale_num))
+    print("agent is checking for scale demand every " + str(interval) + " second(s)...")
     while(True):
       time.sleep(interval)
       scale_num = getPEND()
       prov_num = int(math.ceil(scale_num * 1.0 / shape))  # the final number of VMs to be provisioned
 
-      print('#############################################')
-      print('# the number of VMs need to be scaled is '+str(prov_num)+' #')
-      print('#############################################\n\t')
-
       if(prov_num > 0):
-         print("start")
+
+         print('#############################################')
+         print('# the number of VMs need to be scaled is '+str(prov_num)+' #')
+         print('#############################################\n\t')
+
+         print("start queue cleanup")
          cleanUpQueue()
          print("end queue cleanup")
          provisionVM(prov_num)
