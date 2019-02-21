@@ -7,25 +7,74 @@ import random
 import re
 
 agent_home = "/opt/tools/agent/"
-# Get the PENDS cpu number for normal
-def getPEND():
-    (status, output) = commands.getstatusoutput('qstat -s | grep "Never Run"')
-    if len(output) != 0:
-        print('The pending job information is: '+ output)
-        required = int(re.search('\d+',re.search('R: \d+', output).group()).group())
-        existing = int(re.search('\d+',re.search('A: \d+', output).group()).group())
-        print("required is: " + str(required))
-        print("existing is: " + str(existing))
-        return int(required - existing)
-    return 0
+
+def autoScale():
+    # get all queuing job info
+    (status, output) = commands.getstatusoutput('qstat -s | grep "Q" | grep -v "Queue"')
+    if(output == ""):
+	#print("No job pending")
+	return
+    print("\n######### Pending queue info ###########")
+    print(output)
+
+    with open("tmp.txt", "w") as text_file:
+        text_file.write(output)
+
+    (status, joblist) = commands.getstatusoutput("awk '{print $1}' tmp.txt")
+    #print("\njoblist info is: ")
+    #print(joblist + "\n")
+    job_list = joblist.split("\n")
+
+    for i in range(len(job_list)):
+        
+	# use each job id to find corresponding ncpus/nodes infomation
+	(status, jobid) = commands.getstatusoutput("qstat -f | sed -n '/" + job_list[i] + "/,/project/p' | grep 'Job Id:'")
+	job_id = jobid.split(": ",1)[1]
+	print("\njob_id=" + job_id)
+        (status, reqcpu) = commands.getstatusoutput("qstat -f | sed -n '/" + job_id + "/,/project/p' | grep 'Resource_List.ncpus'")        
+        request_ncpus = int(reqcpu.split("= ",1)[1])
+	(status, reqnode) = commands.getstatusoutput("qstat -f | sed -n '/" + job_id + "/,/project/p' | grep 'Resource_List.nodect'")        
+        request_nodes = int(reqnode.split("= ",1)[1])
+	request_ncpus_per_node = request_ncpus/request_nodes
+        print ("request_nodes=" + str(request_nodes) + ", request_ncpus_per_node=" + str(request_ncpus_per_node))
+	if(request_ncpus_per_node > 8):
+	    (status, output) = commands.getstatusoutput('qdel ' + job_id)
+            print("ncpus_per_node greater than 8 is currently not supported, job is removed from queue.")
+	    continue
+
+	# check current culster resource and see if there's enough resource to run current queuing job
+	resource_list = list(getCurResource())
+	#print("resource_list: " + str(resource_list))
+	assign_list = []
+	for j in range(len(resource_list)):
+	    #print("current resource: " + str(resource_list[j]))
+	    if(resource_list[j] >= request_ncpus_per_node):
+		assign_list.append(resource_list[j])
+		if (len(assign_list) >= request_nodes):
+		    print("assign_list: " + str(assign_list) + ", request is satistied, no need to scale.")
+		    break
+	if(len(assign_list) < request_nodes):
+	    scale_num = request_nodes - len(assign_list) 
+	    print(str(scale_num) + " nodes of at least " + str(request_ncpus_per_node) + " cpus per node need to be scaled.")
+	    shape = ""
+            if(request_ncpus_per_node <= 2):
+	        shape = "VM.Standard2.1"
+	    elif(request_ncpus_per_node <= 4):
+		shape = "VM.Standard2.2"
+	    else:
+		shape = "VM.Standard2.4"
+	    provisionVM(scale_num,shape)
 
 
-# Get all current available CPU number
-def getCurCPU():
-    (status, output) = commands.getstatusoutput('qstat -s')
-    print('The pending job information is: '+ output)
-    existing = int(re.search('\d+',re.search('A: \d+', output).group()).group())
-    return int(existing)
+def getCurResource():
+    reslist = []
+    (status, pbsnodes) = commands.getstatusoutput("pbsnodes -a")
+    for line in pbsnodes.splitlines():
+        if ("resources_available.ncpus" in line):
+            #print("line: " + line)
+            reslist.append(int(line.split("= ",1)[1]))
+    return reslist
+		 
 
 # Clean up Queue:
 def cleanUpQueue():
@@ -42,6 +91,7 @@ def cleanUpQueue():
     for i in range(len(list)):
         (status, output) = commands.getstatusoutput('qdel ' + list[i])
 
+
 # touch a file
 def touch(path):
     with open(path, 'a'):
@@ -54,7 +104,7 @@ def touch(path):
 #3. figure how many VM we should provision
 #4. Provision VM by terraform command
 #5. Wait 5 mins , remove the lock file
-def provisionVM(num):
+def provisionVM(num,shape):
     lock_file = agent_home + '/lock'
     if os.path.exists(lock_file):
 
@@ -70,7 +120,7 @@ def provisionVM(num):
 
     target_file = agent_home + '/image/terraform.tfvars'
     template_file = agent_home + '/image/terraform.tfvars.template'
-    rep(template_file,target_file,str(random.random()),str(num))
+    rep(template_file,target_file,str(random.random()),str(num),shape)
 
     commands.getstatusoutput("rm -rf " + agent_home + "/image/terraform.tfstate")
 
@@ -88,8 +138,9 @@ def provisionVM(num):
     #print('The current CPU number is' ,str(getCurCPU()))
     os.remove(lock_file)
 
+	
 #Replace the terraform variables
-def rep(template_file,target_file,newStr1,newStr2):
+def rep(template_file,target_file,newStr1,newStr2,vmshape):
     if os.path.exists(target_file):
        os.remove(target_file)
 
@@ -99,32 +150,20 @@ def rep(template_file,target_file,newStr1,newStr2):
 
     for line in template.readlines():
        target.write(line.replace('NAME','PBS-'+newStr1).replace('VM',newStr2))
+    
+    target.write('execution_shape = "' + vmshape + '"')
     template.close()
     target.close()
 
 
 def main():
-    interval = 1     # interval time
-    shape = 4       # the number of CPUs of current shape
-    scale_num = getPEND()
-    print("scale_num is: " + str(scale_num))
-    print("agent is checking for scale demand every " + str(interval) + " second(s)...")
+    interval = 10     # interval time
+    print("Agent is checking for scale demand every " + str(interval) + " second(s)...")
     while(True):
-      time.sleep(interval)
-      scale_num = getPEND()
-      prov_num = int(math.ceil(scale_num * 1.0 / shape))  # the final number of VMs to be provisioned
+        autoScale()
+	time.sleep(interval)
 
-      if(prov_num > 0):
-
-         print('#############################################')
-         print('# the number of VMs need to be scaled is '+str(prov_num)+' #')
-         print('#############################################\n\t')
-
-         print("start queue cleanup")
-         cleanUpQueue()
-         print("end queue cleanup")
-         provisionVM(prov_num)
-         
 
 if __name__ == '__main__' :
     main()
+
