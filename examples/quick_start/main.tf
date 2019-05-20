@@ -25,6 +25,7 @@ module "pbspro" {
   availability_domain    = "${lookup(data.oci_identity_availability_domains.ad.availability_domains[var.ad_index - 1], "name")}"
   ssh_authorized_keys    = "${var.ssh_authorized_keys}"
   ssh_private_key        = "${var.ssh_private_key}"
+  private_key_path       = "${var.private_key_path}"
   server_display_name    = "${var.server_display_name}"
   server_shape           = "${var.server_shape}"
   server_image_id        = "${var.image_ids[var.region]}"
@@ -37,4 +38,8 @@ module "pbspro" {
   bastion_host           = "${oci_core_instance.bastion.public_ip}"
   bastion_user           = "${var.bastion_user}"
   bastion_private_key    = "${var.bastion_private_key}"
+  tenancy_ocid            = "${var.tenancy_ocid}"
+  user_ocid               = "${var.user_ocid}"
+  fingerprint           = "${var.fingerprint}"
+  region                = "${var.region}"
 }

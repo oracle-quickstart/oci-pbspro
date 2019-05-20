@@ -49,7 +49,7 @@ variable "execution_display_name" {
 
 variable "execution_shape" {
   description = "The shape for the PBS Pro execution hosts."
-  default     = "VM.Standard2.1"
+  default     = "VM.Standard2.2"
 }
 
 variable "execution_image_id" {
@@ -77,3 +77,9 @@ variable "bastion_user" {
 variable "bastion_private_key" {
   description = "The private key path to access the bastion instance."
 }
+
+variable "private_key_path" {}
+variable "tenancy_ocid" {}
+variable "user_ocid" {}
+variable "fingerprint" {}
+variable "region" {}

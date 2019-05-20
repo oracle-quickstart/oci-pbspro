@@ -9,6 +9,7 @@ variable "ssh_private_key" {}
 variable "bastion_authorized_keys" {}
 variable "bastion_private_key" {}
 
+
 variable "image_ids" {
   type = "map"
 
@@ -39,7 +40,7 @@ variable "server_display_name" {
 
 variable "server_shape" {
   description = "The shape for the PBS Pro server."
-  default     = "VM.Standard1.1"
+  default     = "VM.Standard2.4"
 }
 
 variable "execution_count" {
@@ -54,7 +55,7 @@ variable "execution_display_name" {
 
 variable "execution_shape" {
   description = "The shape for the PBS Pro execution hosts."
-  default     = "VM.Standard2.1"
+  default     = "VM.Standard2.4"
 }
 
 variable "bastion_display_name" {
@@ -64,7 +65,7 @@ variable "bastion_display_name" {
 
 variable "bastion_shape" {
   description = "The shape of the bastion host."
-  default     = "VM.Standard1.1"
+  default     = "VM.Standard2.4"
 }
 
 variable "bastion_user" {
