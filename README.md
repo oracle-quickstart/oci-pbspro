@@ -1,6 +1,6 @@
-# Oracle Cloud Infrastructure PBS Professional Terraform Module
+# oci-quickstart-pbspro
 
-The Oracle Cloud Infrastructure PBS Professional Terraform Module provides an easy way set up a PBS Professional cluster on Oracle Cloud Infrastructure. For information about the PBS Pro, see [Overview of PBS Pro](https://www.pbspro.org/).
+These are Terraform modules that deploy [PBS Pro](https://www.pbspro.org/) on [Oracle Cloud Infrastructure (OCI)](https://cloud.oracle.com/en_US/cloud-infrastructure).
 
 ## Prerequisites
 
@@ -57,15 +57,3 @@ execution_shape | The shape for the PBS Pro execution hosts.
 execution_image_id | The OCID of the image for the PBS Pro execution hosts.
 execution_assign_public_ip | Whether the VNIC should be assigned a public IP address.
 execution_subnet_id | The subnet id to host the PBS Pro execution hosts.
-
-## Contributing
-
-This project is open source. Oracle appreciates any contributions that are made by the open source community.
-
-## License
-
-Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
-
-Licensed under the Universal Permissive License 1.0 or Apache License 2.0.
-
-See [LICENSE](./LICENSE.txt) for more details.
