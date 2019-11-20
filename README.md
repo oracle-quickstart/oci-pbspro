@@ -1,9 +1,7 @@
-# oci-quickstart-pbspro
-
+# oci-pbspro
 These are Terraform modules that deploy [PBS Pro](https://www.pbspro.org/) on [Oracle Cloud Infrastructure (OCI)](https://cloud.oracle.com/en_US/cloud-infrastructure).
 
 ## Prerequisites
-
 See the [Oracle Cloud Infrastructure Terraform Provider docs](https://www.terraform.io/docs/providers/oci/index.html) for information about setting up and using the Oracle Cloud Infrastructure Terraform Provider.
 
 ## How to Use the Module
